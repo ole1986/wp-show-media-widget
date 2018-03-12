@@ -10,6 +10,8 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mediawidget
  */
 
+defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+
 class MediaWidget extends WP_Widget
 {
     private $maxItems = 5;
