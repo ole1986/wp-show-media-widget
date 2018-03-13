@@ -34,3 +34,6 @@ msgstr "Anzahl der gezeigten Elemente:"
 
 msgid "Open in new tab:"
 msgstr "Im neuen Tab öffnen:"
+
+msgid "Hide media title:"
+msgstr "Verstecke Medien Titel:"

@@ -24,3 +24,4 @@ Add it through wordpress or unpack the downloaded zip file into your wp-content/
 = v1.0.2 =
 - implementation into git
 - slightly amended the listing
+- new option: hide media title

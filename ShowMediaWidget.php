@@ -16,6 +16,7 @@ class Ole1986_MediaWidget extends WP_Widget
 {
     private $maxItems = 5;
     private $openInTab = 1;
+    private $hideTitle = false;
 
     /**
      * constructor overload of the WP_Widget class to initialize the media widget
@@ -26,7 +27,7 @@ class Ole1986_MediaWidget extends WP_Widget
 
         add_action('wp_ajax_mediawidget_loadmore', [$this, 'loadmore']);
         add_action('wp_ajax_nopriv_mediawidget_loadmore', [$this, 'loadmore']);
-        add_action('wp_head', [$this, 'js']);
+        add_action('wp_head', [$this, 'head']);
     }
 
     /**
@@ -119,14 +120,21 @@ class Ole1986_MediaWidget extends WP_Widget
             $previewImg = '';
             if ($m->post_mime_type == 'application/pdf') {
                 $thumbnail = $this->generateThumbnailFromPDF($m);
-                $previewImg = '<img src="' . $thumbnail . '" /><br />';
+                $previewImg = '<img src="' . $thumbnail . '" />';
             } else {
 				$thumbnail = wp_get_attachment_image_url($m->ID);
-				$previewImg = '<img src="' . $thumbnail . '" /><br />';
-			}
-
+				$previewImg = '<img src="' . $thumbnail . '" />';
+            }
+            
             $blank = ($this->openInTab) ? 'target="_blank"' : '';
-            echo "<div align=\"center\"><a href=\"" . wp_get_attachment_url($m->ID) . "\" {$blank}>{$previewImg}{$m->post_title}</a></div>";
+            $title = (!$this->hideTitle) ? $m->post_title : '';
+
+            $result = '<div class="media-widget-post media-widget-post-default">';
+            $result.= '<a href="' . wp_get_attachment_url($m->ID) .'"' . $blank . '>' . $previewImg . '</a>';
+            $result.= '<div>'. $title .'</div>';
+            $result.= '</div>';
+
+            echo $result;
         }
     }
 
@@ -139,6 +147,7 @@ class Ole1986_MediaWidget extends WP_Widget
 
         $this->maxItems = (empty($instance['maxitems'])) ? $this->maxItems : intval($instance['maxitems']);
         $this->openInTab = (!empty($instance['newwindow'])) ? 1 : 0;
+        $this->hideTitle = (!empty($instance['hidetitle'])) ? true : false;
 
 		// before and after widget arguments are defined by themes
         echo $args['before_widget'];
@@ -172,11 +181,12 @@ class Ole1986_MediaWidget extends WP_Widget
         $title = isset($instance['title']) ? esc_attr($instance['title']) : "";
         $this->maxItems = isset($instance['maxitems']) ? intval($instance['maxitems']) : $this->maxItems;
         $this->openInTab = (!empty($instance['newwindow'])) ? 1 : 0;
+        $this->hideTitle = (!empty($instance['hidetitle'])) ? true : false;
 
         ?>
 		<p>
 			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'mediawidget');?></label>
-				<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title ?>" />
+			<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title ?>" />
 		</p>
 		<?php if(is_plugin_active('enhanced-media-library/enhanced-media-library.php')): ?>
         	<?php $cats = get_categories(['taxonomy' => 'media_category']); ?>
@@ -193,12 +203,16 @@ class Ole1986_MediaWidget extends WP_Widget
 		<?php endif; ?>
 		</p>
 		<p>
-		<label for="<?php echo $this->get_field_id('maxitems'); ?>"><?php _e('Max items to show:', 'mediawidget');?></label>
-		<input class="widefat" id="<?php echo $this->get_field_id('maxitems'); ?>" name="<?php echo $this->get_field_name('maxitems'); ?>" type="number" value="<?php echo $this->maxItems ?>" />
+            <label for="<?php echo $this->get_field_id('maxitems'); ?>"><?php _e('Max items to show:', 'mediawidget');?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('maxitems'); ?>" name="<?php echo $this->get_field_name('maxitems'); ?>" type="number" value="<?php echo $this->maxItems ?>" />
 		</p>
 		<p>
-		<label for="<?php echo $this->get_field_id('newwindow'); ?>"><?php _e('Open in new tab:', 'mediawidget');?></label>
-		<input class="widefat" id="<?php echo $this->get_field_id('newwindow'); ?>" name="<?php echo $this->get_field_name('newwindow'); ?>" type="checkbox" value="1" <?php echo ($this->openInTab) ? "checked" : "" ?> />
+            <label for="<?php echo $this->get_field_id('newwindow'); ?>" style="display: inline-block; width: 160px"><?php _e('Open in new tab:', 'mediawidget');?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('newwindow'); ?>" name="<?php echo $this->get_field_name('newwindow'); ?>" type="checkbox" value="1" <?php echo ($this->openInTab) ? "checked" : "" ?> />
+		</p>
+        <p>
+            <label for="<?php echo $this->get_field_id('hidetitle'); ?>" style="display: inline-block; width: 160px"><?php _e('Hide media title:', 'mediawidget');?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('hidetitle'); ?>" name="<?php echo $this->get_field_name('hidetitle'); ?>" type="checkbox" value="1" <?php echo ($this->hideTitle) ? "checked" : "" ?> />
 		</p>
 		<?php
     }
@@ -209,9 +223,9 @@ class Ole1986_MediaWidget extends WP_Widget
     }
 
     /**
-     * inject javascript into the frontend using 'wp_head' action
+     * inject javascript and stylesheets into the frontend using 'wp_head' action
      */
-    public function js()
+    public function head()
     {
         ?>
         <script>
@@ -233,6 +247,17 @@ class Ole1986_MediaWidget extends WP_Widget
             });
 	    });
         </script>
+        <style>
+            .media-widget-post-default > a > img {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .media-widget-post-default > div {
+                font-size: smaller;
+                text-align: center;
+                margin-bottom: 1em;
+            }
+        </style>
         <?php
     }
 
