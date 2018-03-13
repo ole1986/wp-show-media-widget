@@ -12,11 +12,14 @@ Text Domain: mediawidget
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
-class MediaWidget extends WP_Widget
+class Ole1986_MediaWidget extends WP_Widget
 {
     private $maxItems = 5;
     private $openInTab = 1;
 
+    /**
+     * constructor overload of the WP_Widget class to initialize the media widget
+     */
     public function __construct()
     {
         parent::__construct('mediawidget', __('Media Widget', 'mediawidget') . ' (PDF support)', ['description' => __('Show media in widget filtered by category', 'mediawidget')]);
@@ -26,18 +29,36 @@ class MediaWidget extends WP_Widget
         add_action('wp_head', [$this, 'js']);
     }
 
+    /**
+     * Used to get media 'posts' based on a category.
+     * The category is being created through the 'Enhanced Media Library' plugin
+     * 
+     * @param int $category the category id to filter for
+     * @param int $offset number of items to skip
+     * @param int $take number of items to take
+     * @return array list of posts with post_type 'attachment'
+     */
     private function getMedia($category, $offset = 0, $take = 5)
     {
         $a = ['showposts' => $take, 'offset' => $offset, 'post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
         return get_posts($a);
 	}
-	
+    
+    /**
+     * Used to receive the count of all media 'posts' stored in a category
+     * 
+     * @param int $category the category id to filter for
+     * @return int number of posts with post_type 'attachment' (filtered by category)
+     */
 	private function getMediaCount($category) {
 		$a = ['fields' => 'ids','post_status' => 'inherit','post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
 		$query = new WP_Query( $a );
 		return $query->found_posts;
-	}
-
+    }
+    
+    /**
+     * [AJAX] instant load additional attachment posts from frontend
+     */
     public function loadmore()
     {
         $media = $this->getMedia($_POST['category'], $_POST['offset'], $_POST['maxitems']);
@@ -46,7 +67,13 @@ class MediaWidget extends WP_Widget
         wp_die();
     }
 
-    public function generateThumbnailFromPDF($m)
+    /**
+     * Generate a thumbnail if the media is a pdf document
+     * 
+     * @param object $m media post object
+     * @return string the url of the thumbnail
+     */
+    protected function generateThumbnailFromPDF($m)
     {
 		// skip if no imagick is available
         if (!extension_loaded('imagick')) {
@@ -81,6 +108,11 @@ class MediaWidget extends WP_Widget
         return $thumbnailUrl;
     }
 
+    /**
+     * Display the media posts onto the frontend
+     * 
+     * @param array list of 'attachment' posts
+     */
     public function showMedia($media)
     {
         foreach ($media as $m) {
@@ -98,6 +130,9 @@ class MediaWidget extends WP_Widget
         }
     }
 
+    /**
+     * Display the widget onto the frontend
+     */
     public function widget($args, $instance)
     {
         global $post;
@@ -125,6 +160,13 @@ class MediaWidget extends WP_Widget
         echo $args['after_widget'];
     }
 
+    /**
+     * Show the widget form in admin area containing the following input arguments
+     * 
+     * - Title
+     * - Category
+     * - Number of items to show
+     */
     public function form($instance)
     {
         $title = isset($instance['title']) ? esc_attr($instance['title']) : "";
@@ -166,37 +208,46 @@ class MediaWidget extends WP_Widget
         return $new;
     }
 
+    /**
+     * inject javascript into the frontend using 'wp_head' action
+     */
     public function js()
     {
         ?>
-<script>
-	jQuery(function(){
-	var $ = jQuery;
+        <script>
+	    jQuery(function(){
+    	    var $ = jQuery;
 
-	$('.mediawidget-readmore').click(function(){
-		var category = $(this).data('category');
-		var offset = parseInt($(this).data('offset'));
-		var maxitems = parseInt($(this).data('maxitems'));
+            $('.mediawidget-readmore').click(function(){
+                var category = $(this).data('category');
+                var offset = parseInt($(this).data('offset'));
+                var maxitems = parseInt($(this).data('maxitems'));
 
-		$(this).data('offset', (offset + maxitems));
+                $(this).data('offset', (offset + maxitems));
 
 
-		$.post('<?php echo admin_url('admin-ajax.php'); ?>', { action: 'mediawidget_loadmore', category: category, offset: offset, maxitems: maxitems }).done(function(data){
-		jQuery('#mediawidget-' + category).append(data);
-		});
+                $.post('<?php echo admin_url('admin-ajax.php'); ?>', { action: 'mediawidget_loadmore', category: category, offset: offset, maxitems: maxitems }).done(function(data){
+                jQuery('#mediawidget-' + category).append(data);
+                });
 
-	});
-	});
-</script>
-<?php
-}
+            });
+	    });
+        </script>
+        <?php
+    }
 
+    /**
+     * initialize the widget class and text-domain part
+     */
     public static function load()
     {
+        // load the text domain
         load_plugin_textdomain('mediawidget', false, dirname(plugin_basename(__FILE__)) . '/lang/');
+        
+        // register self as a widget
         register_widget(get_class());
     }
 }
 
-add_action('widgets_init', ['MediaWidget', 'load']);
+add_action('widgets_init', ['Ole1986_MediaWidget', 'load']);
 ?>
