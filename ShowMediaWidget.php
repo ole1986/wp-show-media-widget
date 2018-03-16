@@ -247,7 +247,16 @@ class Ole1986_MediaWidget extends WP_Widget
         // register self as a widget
         register_widget(get_class());
     }
+    
+    public static function plugin_action($links){
+        if(!is_plugin_active('enhanced-media-library/enhanced-media-library.php'))
+        {
+            $links =  array_merge($links, ['<a href="' . admin_url( 'plugin-install.php?s=enhanced-media-library&tab=search&type=term' ) . '" style="color: #a00;">Install Enhanced Media Library</a>']);
+        }
+        return $links;
+    }
 }
 
 add_action('widgets_init', ['Ole1986_MediaWidget', 'load']);
+add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), ['Ole1986_MediaWidget', 'plugin_action'] );
 ?>
