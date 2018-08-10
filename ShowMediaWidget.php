@@ -77,7 +77,8 @@ class Ole1986_MediaWidget extends WP_Widget
     protected function generateThumbnailFromPDF($m)
     {
 		// skip if no imagick is available
-        if (!extension_loaded('imagick')) {
+        if (!extension_loaded('gmagick')) {
+            echo "No gmagick found"
             return;
         }
 
@@ -91,10 +92,7 @@ class Ole1986_MediaWidget extends WP_Widget
             return $thumbnailUrl;
         }
 
-        $imagick = new Imagick($filepath);
-        $imagick->setIteratorIndex(0);
-        $imagick->setImageOpacity(1);
-        $imagick->setImageCompressionQuality(40);
+        $imagick = new Gmagick($filepath . '[0]');
         $imagick->thumbnailImage(200, null);
         $imagick->setImageFormat('png');
 
