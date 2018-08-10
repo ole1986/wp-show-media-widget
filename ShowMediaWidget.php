@@ -78,7 +78,7 @@ class Ole1986_MediaWidget extends WP_Widget
     {
 		// skip if no imagick is available
         if (!extension_loaded('gmagick')) {
-            echo "No gmagick found"
+            echo "No gmagick found";
             return;
         }
 
