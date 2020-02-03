@@ -3,7 +3,7 @@ Contributors: ole1986
 Tags: media, show, widget, category, pdf support, media files, preview
 Donate link: https://www.paypal.me/OleKoeckemann/5
 Requires at least: 4.0.0
-Tested up to: 4.9
+Tested up to: 5.3
 Stable tag: trunk
 License: GPLv3
 
