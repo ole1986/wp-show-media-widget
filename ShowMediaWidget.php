@@ -2,7 +2,7 @@
 /*
 Plugin Name: Show Media Widget (PDF support)
 Description: List media files in a widget filtered by categories
-Version:     1.0.2
+Version:     1.0.3
 Author:      ole1986
 Author URI:  https://profiles.wordpress.org/ole1986
 License:     GPL2
@@ -14,9 +14,11 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 class Ole1986_MediaWidget extends WP_Widget
 {
+    private $title = '';
     private $maxItems = 5;
     private $openInTab = 1;
     private $hideTitle = false;
+    private $category = 0;
 
     /**
      * constructor overload of the WP_Widget class to initialize the media widget
@@ -62,7 +64,11 @@ class Ole1986_MediaWidget extends WP_Widget
      */
     public function loadmore()
     {
-        $media = $this->getMedia($_POST['category'], $_POST['offset'], $_POST['maxitems']);
+        $settings = $this->get_settings()[$_POST['number']];
+
+        $this->parseSettings($settings);
+
+        $media = $this->getMedia($this->category, $_POST['offset'], $this->maxItems);
         $this->showMedia($media);
 
         wp_die();
@@ -143,13 +149,11 @@ class Ole1986_MediaWidget extends WP_Widget
     {
         global $post;
 
-        $this->maxItems = (empty($instance['maxitems'])) ? $this->maxItems : intval($instance['maxitems']);
-        $this->openInTab = (!empty($instance['newwindow'])) ? 1 : 0;
-        $this->hideTitle = (!empty($instance['hidetitle'])) ? true : false;
-
+        $this->parseSettings($instance);
+       
 		// before and after widget arguments are defined by themes
         echo $args['before_widget'];
-        echo $args['before_title'] . $instance['title'] . $args['after_title'];
+        echo $args['before_title'] . $this->title . $args['after_title'];
 
         echo '<div id="mediawidget-' . $instance['category'] . '">';
         $media = $this->getMedia($instance['category'], 0, $this->maxItems);
@@ -160,8 +164,14 @@ class Ole1986_MediaWidget extends WP_Widget
 		
 		$count = $this->getMediaCount($instance['category']);
 		
-		if($count > $this->maxItems) {
-			echo '<div style="margin-top: 1em;text-align: center; font-size: small;"><a href="javascript:void(0)" class="mediawidget-readmore" data-category="' . $instance['category'] . '" data-offset="' . $this->maxItems . '" data-maxitems="' . $this->maxItems . '">' . __("Show More", 'mediawidget') . '</a></div>';
+		if ($count > $this->maxItems) {
+            ?>
+			<div style="margin-top: 1em;text-align: center; font-size: small;">
+                <a href="javascript:void(0)" data-number="<?php echo $this->number ?>" class="mediawidget-readmore">
+                    <?php _e("Show More", 'mediawidget') ?>
+                </a>
+            </div>
+            <?php
 		}
 
         echo $args['after_widget'];
@@ -176,15 +186,12 @@ class Ole1986_MediaWidget extends WP_Widget
      */
     public function form($instance)
     {
-        $title = isset($instance['title']) ? esc_attr($instance['title']) : "";
-        $this->maxItems = isset($instance['maxitems']) ? intval($instance['maxitems']) : $this->maxItems;
-        $this->openInTab = (!empty($instance['newwindow'])) ? 1 : 0;
-        $this->hideTitle = (!empty($instance['hidetitle'])) ? true : false;
+        $this->parseSettings($instance);
 
         ?>
 		<p>
 			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'mediawidget');?></label>
-			<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title ?>" />
+			<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $this->title ?>" />
 		</p>
 		<?php if(is_plugin_active('enhanced-media-library/enhanced-media-library.php')): ?>
         	<?php $cats = get_categories(['taxonomy' => 'media_category']); ?>
@@ -215,6 +222,15 @@ class Ole1986_MediaWidget extends WP_Widget
 		<?php
     }
 
+    private function parseSettings($instance)
+    {
+        $this->title = isset($instance['title']) ? esc_attr($instance['title']) : "";
+        $this->maxItems = isset($instance['maxitems']) ? intval($instance['maxitems']) : $this->maxItems;
+        $this->openInTab = (!empty($instance['newwindow'])) ? 1 : 0;
+        $this->hideTitle = (!empty($instance['hidetitle'])) ? true : false;
+        $this->category = intval($instance['category']);
+    }
+
     public function update($new, $old)
     {
         return $new;
@@ -230,16 +246,19 @@ class Ole1986_MediaWidget extends WP_Widget
 	    jQuery(function(){
     	    var $ = jQuery;
 
+            //var widgetContent = jQuery('#mediawidget-<?php echo $this->number ?> > div:first');
+
             $('.mediawidget-readmore').click(function(){
-                var category = $(this).data('category');
-                var offset = parseInt($(this).data('offset'));
-                var maxitems = parseInt($(this).data('maxitems'));
+                var $btn = $(this);
+                var widgetContent = $btn.parent().prev();
 
-                $(this).data('offset', (offset + maxitems));
+                var tmp = $btn.text();
+                $btn.text('...');
 
-
-                $.post('<?php echo admin_url('admin-ajax.php'); ?>', { action: 'mediawidget_loadmore', category: category, offset: offset, maxitems: maxitems }).done(function(data){
-                jQuery('#mediawidget-' + category).append(data);
+                var offset = widgetContent.children().length;
+                $.post('<?php echo admin_url('admin-ajax.php'); ?>', { action: 'mediawidget_loadmore', number: $btn.data('number'), offset: offset}).done(function(data){
+                    widgetContent.append(data);
+                    $btn.text(tmp);
                 });
 
             });
