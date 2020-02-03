@@ -2,7 +2,7 @@
 /*
 Plugin Name: Show Media Widget (PDF support)
 Description: List media files in a widget filtered by categories
-Version:     1.0.3
+Version:     1.0.4
 Author:      ole1986
 Author URI:  https://profiles.wordpress.org/ole1986
 License:     GPL2
