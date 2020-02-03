@@ -28,7 +28,4 @@ Add it through wordpress or unpack the downloaded zip file into your wp-content/
 
 == Changelog ==
 
-= v1.0.2 =
-- implementation into git
-- slightly amended the listing
-- new option: hide media title
+Release notes are provided by the [Github project page](https://github.com/ole1986/wp-show-media-widget/releases)
