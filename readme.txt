@@ -26,6 +26,10 @@ The main difference from other media widgets, is the use of taxonomy shipped wit
 == Installation ==
 Add it through wordpress or unpack the downloaded zip file into your wp-content/plugins directory
 
+== Screenshots ==
+
+1. Media Widget with settings in action
+
 == Changelog ==
 
 Release notes are provided by the [Github project page](https://github.com/ole1986/wp-show-media-widget/releases)
