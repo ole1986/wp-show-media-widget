@@ -2,7 +2,7 @@
 /*
 Plugin Name: Show Media Widget (PDF support)
 Description: List media files in a widget filtered by categories
-Version:     1.0.4
+Version:     1.0.5
 Author:      ole1986
 Author URI:  https://profiles.wordpress.org/ole1986
 License:     GPL2
@@ -82,12 +82,6 @@ class Ole1986_MediaWidget extends WP_Widget
      */
     protected function generateThumbnailFromPDF($m)
     {
-		// skip if no imagick is available
-        if (!extension_loaded('gmagick')) {
-            echo "No gmagick found";
-            return;
-        }
-
         $filepath = get_attached_file($m->ID);
         $destPath = preg_replace("/\.pdf$/i", '-image.png', $filepath);
 
@@ -98,10 +92,21 @@ class Ole1986_MediaWidget extends WP_Widget
             return $thumbnailUrl;
         }
 
-        $imagick = new Gmagick($filepath . '[0]');
+        if (!extension_loaded('gmagick') && !extension_loaded('imagick')) {
+            echo 'No gmagick or imagick found';
+            return;
+        }
+
+        if (extension_loaded('gmagick')) {
+            // use gmagick
+            $imagick = new Gmagick($filepath . '[0]');
+        } else if (extension_loaded('imagick')) {
+            // use image magicks
+            $imagick = new Imagick($filepath);
+        }
+
         $imagick->thumbnailImage(200, null);
         $imagick->setImageFormat('png');
-
         $success = $imagick->writeImage($destPath);
 
 		// make it visible in media center
