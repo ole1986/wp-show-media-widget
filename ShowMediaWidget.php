@@ -2,7 +2,7 @@
 /*
 Plugin Name: Show Media Widget (PDF support)
 Description: List media files in a widget filtered by categories
-Version:     1.0.5
+Version:     1.0.6
 Author:      ole1986
 Author URI:  https://profiles.wordpress.org/ole1986
 License:     GPL2
@@ -102,7 +102,7 @@ class Ole1986_MediaWidget extends WP_Widget
             $imagick = new Gmagick($filepath . '[0]');
         } else if (extension_loaded('imagick')) {
             // use image magicks
-            $imagick = new Imagick($filepath);
+            $imagick = new Imagick($filepath . '[0]');
         }
 
         $imagick->thumbnailImage(200, null);
