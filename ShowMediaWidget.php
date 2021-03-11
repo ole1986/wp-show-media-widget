@@ -58,7 +58,7 @@ class Ole1986_MediaWidget extends WP_Widget
      */
     private function getMediaCount($category)
     {
-        $a = ['fields' => 'ids','post_status' => 'inherit','post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
+        $a = ['fields' => 'ids','post_status' => 'inherit','post_type' => 'attachment', 'tax_query' => [['taxonomy' => self::getTaxonomyName(), 'terms' => $category, 'field' => 'ID']]];
         $query = new WP_Query($a);
         return $query->found_posts;
     }
