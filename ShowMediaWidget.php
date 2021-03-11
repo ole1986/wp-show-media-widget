@@ -2,7 +2,7 @@
 /*
 Plugin Name: Show Media Widget (PDF support)
 Description: List media files in a widget filtered by categories
-Version:     1.0.6
+Version:     1.0.7
 Author:      ole1986
 Author URI:  https://profiles.wordpress.org/ole1986
 License:     GPL2
@@ -10,7 +10,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mediawidget
  */
 
-defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+defined('ABSPATH') or die('No script kiddies please!');
 
 class Ole1986_MediaWidget extends WP_Widget
 {
@@ -37,26 +37,30 @@ class Ole1986_MediaWidget extends WP_Widget
      * The category is being created through the 'Enhanced Media Library' plugin
      * 
      * @param int $category the category id to filter for
-     * @param int $offset number of items to skip
-     * @param int $take number of items to take
+     * @param int $offset   number of items to skip
+     * @param int $take     number of items to take
+     * 
      * @return array list of posts with post_type 'attachment'
      */
     private function getMedia($category, $offset = 0, $take = 5)
     {
-        $a = ['showposts' => $take, 'offset' => $offset, 'post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
+
+        $a = ['showposts' => $take, 'offset' => $offset, 'post_type' => 'attachment', 'tax_query' => [['taxonomy' => self::getTaxonomyName(), 'terms' => $category, 'field' => 'ID']]];
         return get_posts($a);
-	}
+    }
     
     /**
      * Used to receive the count of all media 'posts' stored in a category
      * 
      * @param int $category the category id to filter for
+     * 
      * @return int number of posts with post_type 'attachment' (filtered by category)
      */
-	private function getMediaCount($category) {
-		$a = ['fields' => 'ids','post_status' => 'inherit','post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
-		$query = new WP_Query( $a );
-		return $query->found_posts;
+    private function getMediaCount($category)
+    {
+        $a = ['fields' => 'ids','post_status' => 'inherit','post_type' => 'attachment', 'tax_query' => [['taxonomy' => 'media_category', 'terms' => $category, 'field' => 'ID']]];
+        $query = new WP_Query($a);
+        return $query->found_posts;
     }
     
     /**
@@ -78,6 +82,7 @@ class Ole1986_MediaWidget extends WP_Widget
      * Generate a thumbnail if the media is a pdf document
      * 
      * @param object $m media post object
+     * 
      * @return string the url of the thumbnail
      */
     protected function generateThumbnailFromPDF($m)
@@ -109,9 +114,9 @@ class Ole1986_MediaWidget extends WP_Widget
         $imagick->setImageFormat('png');
         $success = $imagick->writeImage($destPath);
 
-		// make it visible in media center
+        // make it visible in media center
         $attachment_id = wp_insert_attachment(['post_title' => $m->post_title . ' (thumbnail)', 'post_mime_type' => 'image/png'], $destPath, $m->ID);
-        require_once ABSPATH . 'wp-admin/includes/image.php';
+        include_once ABSPATH . 'wp-admin/includes/image.php';
         $metadata = wp_generate_attachment_metadata($attachment_id, $destPath);
         wp_update_attachment_metadata($attachment_id, $metadata);
 
@@ -121,7 +126,7 @@ class Ole1986_MediaWidget extends WP_Widget
     /**
      * Display the media posts onto the frontend
      * 
-     * @param array list of 'attachment' posts
+     * @param array $media list of 'attachment' posts
      */
     public function showMedia($media)
     {
@@ -131,8 +136,8 @@ class Ole1986_MediaWidget extends WP_Widget
                 $thumbnail = $this->generateThumbnailFromPDF($m);
                 $previewImg = '<img src="' . $thumbnail . '" />';
             } else {
-				$thumbnail = wp_get_attachment_image_url($m->ID);
-				$previewImg = '<img src="' . $thumbnail . '" />';
+                $thumbnail = wp_get_attachment_image_url($m->ID);
+                $previewImg = '<img src="' . $thumbnail . '" />';
             }
             
             $blank = ($this->openInTab) ? 'target="_blank"' : '';
@@ -156,7 +161,7 @@ class Ole1986_MediaWidget extends WP_Widget
 
         $this->parseSettings($instance);
        
-		// before and after widget arguments are defined by themes
+        // before and after widget arguments are defined by themes
         echo $args['before_widget'];
         echo $args['before_title'] . $this->title . $args['after_title'];
 
@@ -165,19 +170,19 @@ class Ole1986_MediaWidget extends WP_Widget
 
         $this->showMedia($media);
 
-		echo '</div>';
-		
-		$count = $this->getMediaCount($instance['category']);
-		
-		if ($count > $this->maxItems) {
+        echo '</div>';
+        
+        $count = $this->getMediaCount($instance['category']);
+        
+        if ($count > $this->maxItems) {
             ?>
-			<div style="margin-top: 1em;text-align: center; font-size: small;">
+            <div style="margin-top: 1em;text-align: center; font-size: small;">
                 <a href="javascript:void(0)" data-number="<?php echo $this->number ?>" class="mediawidget-readmore">
                     <?php _e("Show More", 'mediawidget') ?>
                 </a>
             </div>
             <?php
-		}
+        }
 
         echo $args['after_widget'];
     }
@@ -194,37 +199,37 @@ class Ole1986_MediaWidget extends WP_Widget
         $this->parseSettings($instance);
 
         ?>
-		<p>
-			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'mediawidget');?></label>
-			<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $this->title ?>" />
-		</p>
-		<?php if(is_plugin_active('enhanced-media-library/enhanced-media-library.php')): ?>
-        	<?php $cats = get_categories(['taxonomy' => 'media_category']); ?>
-			<p>
-			<label for="<?php echo $this->get_field_id('category'); ?>"><?php _e('Category:', 'mediawidget');?></label>
-			<select class="widefat" id="<?php echo $this->get_field_id('category'); ?>" name="<?php echo $this->get_field_name('category'); ?>">
-			<option value="">(None)</option>
-			<?php foreach ($cats as $c) {?>
-				<option value="<?php echo $c->cat_ID ?>" <?php selected($instance['category'], $c->cat_ID);?>><?php echo $c->name ?></option>
-			<?php }?>
-			</select>
-		<?php else: ?>
-			<p>The <a href="/wp-admin/plugin-install.php?s=enhanced+media+library&tab=search&type=term">enhanced media library</a> is required to select categories</p>
-		<?php endif; ?>
-		</p>
-		<p>
+        <p>
+            <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'mediawidget');?></label>
+            <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $this->title ?>" />
+        </p>
+        <?php if(!empty(self::getTaxonomyName())) : ?>
+            <?php $cats = get_categories(['taxonomy' => self::getTaxonomyName()]); ?>
+            <p>
+            <label for="<?php echo $this->get_field_id('category'); ?>"><?php _e('Category:', 'mediawidget');?></label>
+            <select class="widefat" id="<?php echo $this->get_field_id('category'); ?>" name="<?php echo $this->get_field_name('category'); ?>">
+            <option value="">(None)</option>
+            <?php foreach ($cats as $c) {?>
+                <option value="<?php echo $c->cat_ID ?>" <?php selected($instance['category'], $c->cat_ID);?>><?php echo $c->name ?></option>
+            <?php }?>
+            </select>
+    <?php else: ?>
+            <p style="color: #d63638">At least one taxonomy plugin for media categories is required. Pick one given in this plugin entry</p>
+    <?php endif; ?>
+        </p>
+        <p>
             <label for="<?php echo $this->get_field_id('maxitems'); ?>"><?php _e('Max items to show:', 'mediawidget');?></label>
             <input class="widefat" id="<?php echo $this->get_field_id('maxitems'); ?>" name="<?php echo $this->get_field_name('maxitems'); ?>" type="number" value="<?php echo $this->maxItems ?>" />
-		</p>
-		<p>
+        </p>
+        <p>
             <label for="<?php echo $this->get_field_id('newwindow'); ?>" style="display: inline-block; width: 160px"><?php _e('Open in new tab:', 'mediawidget');?></label>
             <input class="widefat" id="<?php echo $this->get_field_id('newwindow'); ?>" name="<?php echo $this->get_field_name('newwindow'); ?>" type="checkbox" value="1" <?php echo ($this->openInTab) ? "checked" : "" ?> />
-		</p>
+        </p>
         <p>
             <label for="<?php echo $this->get_field_id('hidetitle'); ?>" style="display: inline-block; width: 160px"><?php _e('Hide media title:', 'mediawidget');?></label>
             <input class="widefat" id="<?php echo $this->get_field_id('hidetitle'); ?>" name="<?php echo $this->get_field_name('hidetitle'); ?>" type="checkbox" value="1" <?php echo ($this->hideTitle) ? "checked" : "" ?> />
-		</p>
-		<?php
+        </p>
+        <?php
     }
 
     private function parseSettings($instance)
@@ -248,8 +253,8 @@ class Ole1986_MediaWidget extends WP_Widget
     {
         ?>
         <script>
-	    jQuery(function(){
-    	    var $ = jQuery;
+        jQuery(function(){
+            var $ = jQuery;
 
             //var widgetContent = jQuery('#mediawidget-<?php echo $this->number ?> > div:first');
 
@@ -267,7 +272,7 @@ class Ole1986_MediaWidget extends WP_Widget
                 });
 
             });
-	    });
+        });
         </script>
         <style>
             .media-widget-post-default > a > img {
@@ -294,16 +299,33 @@ class Ole1986_MediaWidget extends WP_Widget
         // register self as a widget
         register_widget(get_class());
     }
-    
-    public static function plugin_action($links){
-        if(!is_plugin_active('enhanced-media-library/enhanced-media-library.php'))
-        {
-            $links =  array_merge($links, ['<a href="' . admin_url( 'plugin-install.php?s=enhanced-media-library&tab=search&type=term' ) . '" style="color: #a00;">Install Enhanced Media Library</a>']);
+
+    public static function getTaxonomyName()
+    {
+        if (is_plugin_active('enhanced-media-library/enhanced-media-library.php')) {
+            return 'media_category';
+        } else if (is_plugin_active('media-library-assistant/index.php')) {
+            return 'attachment_category';
         }
-        return $links;
+
+        return '';
+    }
+    
+    public static function plugin_row_meta($meta, $file, $data, $status)
+    {
+        if (strpos($file, plugin_basename(__FILE__)) !== false && empty(self::getTaxonomyName())) {
+            $new_links = array(
+                    'install_hint_1' => '<a href="' . admin_url('plugin-install.php?s=enhanced-media-library&tab=search&type=term') . '" style="color: #a00;">Install Enhanced Media Library</a>',
+                    'install_hint_2' =>  '<a href="' . admin_url('plugin-install.php?s=media-library-assistan&tab=search&type=term') . '" style="color: #a00;">Install Media Library Assitant</a>'
+                    );
+             
+            $meta = array_merge($meta, $new_links);
+        }
+         
+        return $meta;
     }
 }
 
 add_action('widgets_init', ['Ole1986_MediaWidget', 'load']);
-add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), ['Ole1986_MediaWidget', 'plugin_action'] );
+add_filter('plugin_row_meta', ['Ole1986_MediaWidget', 'plugin_row_meta'], 10, 4);
 ?>
