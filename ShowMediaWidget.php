@@ -1,13 +1,16 @@
 <?php
-/*
-Plugin Name: Show Media Widget (PDF support)
-Description: List media files in a widget filtered by categories
-Version:     1.0.7
-Author:      ole1986
-Author URI:  https://profiles.wordpress.org/ole1986
-License:     GPL2
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: mediawidget
+/**
+ * Plugin Name: Show Media Widget (PDF support)
+ * Description: List media files in a widget filtered by categories
+ * Version:     1.0.8
+ * Author:      ole1986
+ * Author URI:  https://profiles.wordpress.org/ole1986
+ * License:     GPL2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: mediawidget
+ * 
+ * @author  Ole Köckemann <ole.koeckemann@gmail.com>
+ * @license MIT <https://raw.githubusercontent.com/Cloud-86/social-plugin-metadata/master/LICENSE>
  */
 
 defined('ABSPATH') or die('No script kiddies please!');
@@ -154,6 +157,9 @@ class Ole1986_MediaWidget extends WP_Widget
 
     /**
      * Display the widget onto the frontend
+     * 
+     * @param array $args     widget argeuments
+     * @param array $instance current instance
      */
     public function widget($args, $instance)
     {
@@ -184,6 +190,13 @@ class Ole1986_MediaWidget extends WP_Widget
             <?php
         }
 
+        if (is_admin()) : ?>
+            <div style='position: relative; margin-top: 2em'>
+                <div style='position: absolute; font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: 70%; text-align: right; bottom: 0px; right: 0px; background-color: #f0f0f0; padding: 0.5em;'><?php _e('Media Widget', 'mediawidget')  ?></div>
+            </div>
+        <?php endif; ?>
+        <?php
+
         echo $args['after_widget'];
     }
 
@@ -193,6 +206,8 @@ class Ole1986_MediaWidget extends WP_Widget
      * - Title
      * - Category
      * - Number of items to show
+     * 
+     * @param array $instance current instance array
      */
     public function form($instance)
     {
